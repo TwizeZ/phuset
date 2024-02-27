@@ -1,30 +1,30 @@
-import time
-import tkinter as tk
+from datetime import datetime
 import json
 
 DATABASE = "data.json"
+cars_list = []
 
 class Car():
-    def __init__(self, reg_num, owner, car_type):
+    def __init__(self, reg_num, owner, car_class):
         self.reg_num = reg_num
         self.owner = owner
-        self.car_type = car_type
+        self.car_class = car_class
         self.parking_history = []
     
     def __str__(self):
-        return f"Car info: {self.reg_num}, {self.car_type}."
+        return f"Car info: {self.reg_num}, {self.car_class}."
     
     def car_format(self):
-        return {"reg_num": self.reg_num, "owner": self.owner, "car_type": self.car_type, "parking_history": self.parking_history}
+        return {"reg_num": self.reg_num, "owner": self.owner, "car_class": self.car_class, "parking_history": self.parking_history}
     
-    def add_parking(self, parking):
-        self.parking_history.append(parking.parking_format())
+    def show_debt(self):
+        pass
     
-class Parking(Car):
-    def __init__(self, reg_num, car_type, owner, start_time, end_time):
-        super().__init__(reg_num, car_type, owner)                          # NOTE: Går det att ta bort owner?
+class Parking():
+    def __init__(self, start_time, end_time, car_class):
         self.start_time = start_time
         self.end_time = end_time
+        self.car_class = car_class
         self.total_time = end_time - start_time
         self.total_cost = self.calc_cost()
     
@@ -35,44 +35,41 @@ class Parking(Car):
         return {"start_time": self.start_time, "end_time": self.end_time, "total_time": self.total_time, "total_cost": self.total_cost}
 
     def calc_cost(self):
-        if self.car_type == "light":
+        if self.car_class == "light":
             cost_per_hour = 15
-        elif self.car_type == "medium":
+        elif self.car_class == "medium":
             cost_per_hour = 20
         else:
             cost_per_hour = 25
         
-        return cost_per_hour * self.total_time          # NOTE: avrunda pris uppåt till närmaste halvtimme.
-
+        return cost_per_hour * self.total_time          # NOTE: avrunda pris uppåt till närmaste halvtimme. Måste förstå hur det kan göras med tid
 
 def write_to_file(data):
-    with open("data.json", "w") as file:
+    with open(DATABASE, "w") as file:
         json.dump(data, file, indent=4)
 
-def load_from_file():
+def read_from_file():
     with open("data.json", "r") as file:
         data = json.load(file)
     return data
 
-def deposit(balance, amount):
-    balance += amount
+def int_input(prompt):
+    while True:
+        try:
+            return int(input(prompt))
+        except ValueError:
+            print("Invalid input. Please enter a number.")
 
-def add_car(cars_list, new_car):
-    cars_list.append(new_car.car_format())
+def pay_parking():
+    print("ALL PARKINGS FOR A CAR HERE")
+    print("Which parking do you want to pay for?")
+    print("How much do you want to pay?")
 
-def remove_car(cars_list, reg_num):
-    for car in cars_list:
-        if cars_list["reg_num"] == reg_num:
-            cars_list.remove(car)
-            return True
-    return False
+def add_car(reg_num, owner, car_class):
+    pass
 
-def get_cost(cars_list):
-    cost = 0
-    for car in cars_list:
-        for parking in car["parking_history"]:
-            cost += parking["total_cost"]
-    return cost
+def remove_car(reg_num):                                # NOTE Ska bara kunna göras om inga kostnader finns kvar att betala
+    pass
 
 
 def main():
@@ -81,26 +78,27 @@ def main():
     car2 = Car("DEF456", "Also Someone", "medium")
     car3 = Car("GHI789", "Another Someone", "large")
 
-    parking1 = Parking(car1.car_format()["reg_num"], car1.car_format()["car_type"], car1.car_format()["owner"], 12, 15)
-    parking2 = Parking(car2.car_format()["reg_num"], car2.car_format()["car_type"], car2.car_format()["owner"], 10, 17)
+    parking1 = Parking(12, 15, car1.car_format()["car_class"])
     car1.add_parking(parking1)
+    parking2 = Parking(12, 15, car1.car_format()["car_class"])
     car2.add_parking(parking2)
+
+    cars_list.append(car1.car_format())
+    cars_list.append(car2.car_format())
 
     print(car1.car_format())
 
     print()
 
-    write_to_file(car1.car_format())
+    write_to_file(cars_list)
 
-    print(load_from_file())
+    print(read_from_file())
+
+    print("------------------------------------")
+
+    # print(Car.show_balance())
 
     print()
-    # print("Total cost:", get_cost([car1.car_format()]))
-
-    # print()
-    # persons = []
-    # persons.append(person1.person_format())
-    # print(persons)
 
 if __name__ == "__main__":
     main()

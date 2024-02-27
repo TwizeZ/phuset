@@ -1,0 +1,28 @@
+[
+    {
+        "reg_num": "ABC123",
+        "owner": "Someone",
+        "car_class": "small",
+        "parking_history": [
+            {
+                "start_time": 12,
+                "end_time": 15,
+                "total_time": 3,
+                "total_cost": 75
+            }
+        ]
+    },
+    {
+        "reg_num": "DEF456",
+        "owner": "Also Someone",
+        "car_class": "medium",
+        "parking_history": [
+            {
+                "start_time": 12,
+                "end_time": 15,
+                "total_time": 3,
+                "total_cost": 75
+            }
+        ]
+    }
+]
