@@ -1,28 +1,24 @@
-[
-    {
+{
+    "ABC123": {
         "reg_num": "ABC123",
         "owner": "Someone",
-        "car_class": "small",
+        "car_class": "light",
+        "balance": 0,
         "parking_history": [
             {
-                "start_time": 12,
-                "end_time": 15,
-                "total_time": 3,
-                "total_cost": 75
-            }
-        ]
-    },
-    {
-        "reg_num": "DEF456",
-        "owner": "Also Someone",
-        "car_class": "medium",
-        "parking_history": [
+                "date": "2024-03-28",
+                "start_time": "12:00",
+                "end_time": "14:30",
+                "total_time": "2:30:00",
+                "total_cost": 37.5
+            },
             {
-                "start_time": 12,
-                "end_time": 15,
-                "total_time": 3,
-                "total_cost": 75
+                "date": "2024-03-28",
+                "start_time": "16:23",
+                "end_time": "21:58",
+                "total_time": "5:35:00",
+                "total_cost": 90.0
             }
         ]
     }
-]
+}
