@@ -1,6 +1,7 @@
 from datetime import datetime
 from math import ceil
 import json
+import os
 
 cars_dict = {}
 
@@ -35,55 +36,53 @@ class Car():
     def add_parking(self, parking):
         self.parking_history.append(parking.parking_format())
 
-    def show_parking(self):
+    def print_parking(self):
+        print(f"\nList of all parkings for [{self.reg_num}]:")
         parking = self.parking_history
         if not parking:
             print(f"\nNo parkings has been registered for [{self.reg_num}].")
         else:
             total_debt = 0
             for i, parking in enumerate(self.parking_history):
-                print(f"\nParking {i+1}:\nDate: {parking['date']}\nTime: {parking['start_time']} - {parking['end_time']} ({parking['total_time']})\nCost: {parking['total_cost']}")
-                total_debt += parking["total_cost"]
+                print(f"\nParking {i+1}:\n┗━ Date: {parking['date']}\n┗━ Time: {parking['start_time']} - {parking['end_time']} ({parking['total_time']})\n┗━ Cost: {parking['total_cost']}\n┗━ Paid: {parking['paid']}")
+                if parking["paid"] == False:
+                    total_debt += parking["total_cost"]
             print(f"\nTotal debt: {total_debt}")
             return i
 
     def pay_parking(self):
-        print("\nList of all parkings for this car:")
-        i = self.show_parking()
+        i = self.print_parking() + 1
         pay_loop = True
         while pay_loop:
-            park_num = int_input(f"\nWhich parking entry would you like to pay for? (1-{i+1})\n>> ")
+            park_num = int_input(f"\nWhich parking entry would you like to pay for? (1-{i})\n>> ") - 1
             try:
-                cost = self.parking_history[park_num-1]["total_cost"]
-                if cost == 0:
-                    self.parking_history[park_num-1]["total_cost"] = 0
+                if park_num < 0:
+                    raise IndexError
+                elif self.parking_history[park_num]["paid"] == True:
                     return "Parking has already been paid for."
                 else:
+                    cost = self.parking_history[park_num]["total_cost"]
                     pay_loop = False
             except IndexError:
                 print("That is not an option.")
         
         if self.balance != 0:
-            print(f"\nThe cost for parking {i+1} is {cost}.")
+            print(f"\nThe cost for parking {i} is {cost}.")
             balance_loop = True
             while balance_loop:
                 use_balance = input("Would you like to use your balance to pay for the parking? (yes/no)\n>> ")
                 print()
-                if use_balance == "yes":
+                if use_balance.lower() == "yes":
                     if self.balance == cost:
-                        self.balance, cost, self.parking_history[park_num-1]["total_cost"] = 0, 0, 0
-                        cars_dict[self.reg_num] = self.car_format()
-                        return f"Parking paid in full with your balance."
+                        self.balance = 0
                     elif self.balance < cost:
                         cost -= self.balance
                         print(f"Payment of {self.balance} was made. {cost} remains.")
                         self.balance = 0
                     else:
                         self.balance -= cost
-                        self.parking_history[park_num-1]["total_cost"] = 0
-                        print(f"Parking paid in full. New balance: {self.balance}.")
                     balance_loop = False
-                elif use_balance == "no":
+                elif use_balance.lower() == "no":
                     balance_loop = False
                 else:
                     print("Invalid input. Please enter yes or no.")
@@ -91,21 +90,17 @@ class Car():
         if cost != 0:
             payment_loop = True
             while payment_loop:
-                payment = int_input("\nHow much would you like to pay?\n(If you pay more than the parking's fine, it will be added to a total balance.)\n>> ")
+                payment = int_input(f"\nHow much would you like to pay? (minimum {cost})\n(If you pay more than the parking's fine, it will be added to a total balance.)\n>> ")
                 print()
                 if payment < cost:
                     print(f"Not enough money. At least {cost} is required.")
-                elif payment == cost:
-                    self.parking_history[park_num-1]["total_cost"] = 0
-                    print("Parking paid in full.")
-                    payment_loop = False
                 else:
                     self.balance = self.balance + (payment - cost)
-                    self.parking_history[park_num-1]["total_cost"] = 0
-                    print(f"Parking paid in full. {self.balance} was added to your balance.")
                     payment_loop = False
+        
+        self.parking_history[park_num]["paid"] = True
         cars_dict[self.reg_num] = self.car_format()
-        return "Payment completed. Thank you!"
+        return f"Payment completed. New balance: {self.balance}. Thank you!"
 
 class Parking():
     """
@@ -117,16 +112,17 @@ class Parking():
     total_time: The total time the car was parked
     total_cost: The total cost of the parking
 	"""
-    def __init__(self, start_time, end_time, car_class):
+    def __init__(self, start_time, end_time, car_class, paid=False):
         self.start_time = start_time
         self.end_time = end_time
         self.car_class = car_class
+        self.paid = paid
         self.date = str(datetime.now().date())
         self.total_time = self.calc_time()
         self.total_cost = self.calc_cost()
     
     def __str__(self):
-        return f"┗━ Time: {self.start_time} - {self.end_time} ({self.total_time})\n┗━ Cost: {self.total_cost}"
+        return f"┗━ Time: {self.start_time} - {self.end_time} ({self.total_time})\n┗━ Cost: {self.total_cost}\n┗━ Paid: {str(self.paid)}"
     
     def parking_format(self):
         return {
@@ -134,7 +130,8 @@ class Parking():
                 "start_time": self.start_time,
                 "end_time": self.end_time,
                 "total_time": self.total_time,
-                "total_cost": self.total_cost
+                "total_cost": self.total_cost,
+                "paid": self.paid
                 }
 
     def calc_time(self):
@@ -157,28 +154,27 @@ class Parking():
         rounded_time = ceil(time * 2) / 2
         
         if self.car_class == "light":
-            cost_per_hour = 15
+            cost_per_hour = 10
         elif self.car_class == "medium":
             cost_per_hour = 20
         else:
-            cost_per_hour = 25
+            cost_per_hour = 30
         
         return round(cost_per_hour * rounded_time)
 
 def write_to_file(datafile):
+    print("\nSaving to file...")
     with open(datafile, "w", encoding="utf8") as file:
         json.dump(cars_dict, file, indent=4)
+    return print(f"Data has been saved to file '{datafile}'.")
 
 def read_from_file(datafile):
     while True:
         try:
             with open(datafile, "r", encoding="utf8") as file:
                 loaded_data = json.load(file)
-                file_objects = {}
                 for reg_num, car_data in loaded_data.items():
-                    file_objects[reg_num] = Car(**car_data)
                     cars_dict[reg_num] = car_data
-                    print(file_objects[reg_num])
                 
                 print(f"\nLoading {len(loaded_data)} entities from file...")
             return loaded_data
@@ -201,8 +197,8 @@ def parking_input(prompt):
             time = input(prompt)
             hours, mins = time.split(":")
             if int(hours) in range(0, 24) and int(mins) in range(0, 60):
-                # if time[0]== "0":
-                #     time = time[1:]
+                if time[0]== "0":
+                    time = time[1:]
                 return time
             else:
                 raise ValueError
@@ -213,22 +209,22 @@ def reg_check(prompt):
     while True:
         try:
             reg_num = input(prompt)
-            car = cars_dict[reg_num]
-            car[reg_num] = Car(car["reg_num"], car["owner"], car["car_class"], car["balance"], car["parking_history"])
-            return reg_num, car[reg_num]
+            car_info = cars_dict[reg_num]
+            checked_car = Car(car_info["reg_num"], car_info["owner"], car_info["car_class"], car_info["balance"], car_info["parking_history"])
+            return reg_num, checked_car
         except KeyError:
             print(f"Car [{reg_num}] not found in database. (You can add a new car from the main menu)")
 
-def add_car(reg_num, owner, car_class, balance=0, parking_history=[]):
-    added_car = Car(reg_num, owner, car_class, balance, parking_history)
-    cars_dict[added_car.reg_num] = added_car.car_format()
+def new_car(reg_num, owner, car_class, balance=0, parking_history=[]):
+    new_car = Car(reg_num, owner, car_class, balance, parking_history)
+    cars_dict[new_car.reg_num] = new_car.car_format()
     return f"\nCar [{reg_num}] was added to database."
 
 def menu():
     print("""
             Park Dark Mark Bark
 -------------------------------------------
-{0} TESTING
+{0} DEBUG
           
 {1} New parking
 {2} Read file & history
@@ -241,7 +237,7 @@ def menu():
     menu_loop = True
     while menu_loop:
         choice = int_input(">> ")
-        if choice in range(0, 7):           # NOTE Ändra till 1-6 när TESTING tas bort
+        if choice in range(0, 7):           # NOTE Ändra till 1-6 när DEBUG tas bort
             return choice
         else:
             print("Invalid input. Please try again.")
@@ -297,19 +293,17 @@ def execute(choice, cars_dict=cars_dict):
                     car_class_loop = False
 
             print("Adding car to database...")
-            print(add_car(reg_num, owner, car_class))
+            print(new_car(reg_num, owner, car_class))
 
         elif choice == 4:     # Parking history & costs
             reg_num, car = reg_check("Registration number of car to show history for: ")
-            car.show_parking()
+            car.print_parking()
 
         elif choice == 5:     # Pay for parking
             reg_num, car = reg_check("Registration number of car to pay for: ")
             print(car.pay_parking())
             
         elif choice == 6:     # Avsluta NOTE fixa utan break
-            reg_num, car = reg_check("Reg num: ")
-            print(car)
             break
 
         elif choice == 0:
@@ -322,18 +316,20 @@ def execute(choice, cars_dict=cars_dict):
 
             # cars_dict[car1.reg_num] = car1.car_format()
             # print("\n" + str(car1) + "\n")
-            # car1.show_parking()
+            # car1.print_parking()
 
-            cars_dict = read_from_file("data.json")
-            # print(cars_dict)
+            cars_dict = read_from_file("ex.json")
+            print(cars_dict)
 
         print()
         choice = menu()
         print()
-    write_to_file("data.json")
 
 def main():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    read_from_file("data.json")
     execute(menu())
+    print(write_to_file("data.json"))
 
 if __name__ == "__main__":
     main()
