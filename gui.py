@@ -220,8 +220,12 @@ class Application(Frame):
         """
         try:
             car_obj = main.cars_dict[reg_num]
-            checked_car = main.Car(car_obj["reg_num"], car_obj["owner"], car_obj["car_class"], car_obj["balance"],
-                                   car_obj["parking_history"])
+            checked_car = main.Car(car_obj["reg_num"],
+                                   car_obj["owner"],
+                                   car_obj["car_class"],
+                                   car_obj["balance"],
+                                   car_obj["parking_history"]
+                                   )
             return checked_car
         except KeyError:
             return f"Car [{reg_num}] not found in database. You can add a new car from the main menu."
@@ -252,10 +256,6 @@ class Application(Frame):
 
         if filename == "":
             self.new_output("Please enter a file name in the input field.\nFormat: 'filename.json'.")
-        elif not os.path.exists(filename):
-            self.new_output("File not found. Please try again.")
-        elif not filename.endswith(".json"):
-            self.new_output("File must be in JSON format. Please try again.")
         else:
             file_info = main.read_from_file(filename)
             self.new_output(file_info)
@@ -264,10 +264,12 @@ class Application(Frame):
     def bttn_display_car(self):
         """Displays the car's information.
         """
-        car_obj = self.reg_check(self.reg_num_ent.get().upper())
-
-        if not car_obj:
-            self.new_output(car_obj + "\n\nIf the input is empty, please enter a registration number.")
+        reg_num = self.reg_num_ent.get().upper()
+        car_obj = self.reg_check(reg_num)
+        if reg_num == "":
+            self.new_output("Please enter a registration number in the input field.")
+        elif not isinstance(car_obj, main.Car):
+            self.new_output(car_obj)
         else:
             self.new_output(car_obj)
 
@@ -300,8 +302,8 @@ class Application(Frame):
 
         if reg_num == "" or start_time == "" or end_time == "":
             self.new_output("All fields must be filled. Try again.", window)
-        elif not inspect.isclass(car_obj):
-            self.new_output(car_obj, window)
+        elif not isinstance(car_obj, main.Car):
+            self.new_output(f"Car [{reg_num}] not found in database. Try again.", window)
         elif not start_h or not end_h:
             self.new_output(start_time, window)
         elif end_h < start_h or (end_h <= start_h and end_m < start_m) or (end_h == start_h and end_m == start_m):
@@ -316,13 +318,19 @@ class Application(Frame):
     def bttn_parking_history(self):
         """Displays the parking history of the car.
         """
-        car_obj = self.reg_check(self.reg_num_ent.get().upper())
+        reg_num = self.reg_num_ent.get().upper()
+        car_obj = self.reg_check(reg_num)
 
-        if not car_obj:
-            self.new_output(car_obj + "\n\nIf the input is empty, please enter a registration number.")
+        if reg_num == "":
+            self.new_output("Please enter a registration number in the input field.")
+        elif not isinstance(car_obj, main.Car):
+            self.new_output(car_obj)
         else:
             parking_history = car_obj.print_parking()
-            self.new_output(parking_history)
+            if parking_history == False:
+                self.new_output(f"Car [{reg_num}] has no parking history.")
+            else:
+                self.new_output(parking_history)
 
     def bttn_pay_parking(self, window):
         """Pays for a parking.
@@ -338,7 +346,7 @@ class Application(Frame):
 
             if reg_num == "" or amount == "":
                 self.new_output("All fields must be filled. Try again.", window)
-            elif not inspect.isclass(car_obj):
+            elif not isinstance(car_obj, main.Car):
                 self.new_output(car_obj, window)
             elif park_num < 0:
                 self.new_output("Parking number must be a positive integer. Try again.", window)

@@ -212,28 +212,24 @@ def read_from_file(datafile):
 
     :return: A confirmation message.
     """
-    while True:
-        try:
-            if os.stat(datafile).st_size == 0:  # If file is empty
-                raise TypeError
-            else:
-                with open(datafile, "r", encoding="utf8") as file:
-                    loaded_data = json.load(file)
-                    for reg_num, car_data in loaded_data.items():
-                        cars_dict[reg_num] = car_data
+    try:
+        if os.stat(datafile).st_size == 0:  # If file is empty
+            raise TypeError
+        else:
+            with open(datafile, "r", encoding="utf8") as file:
+                loaded_data = json.load(file)
+                for reg_num, car_data in loaded_data.items():
+                    cars_dict[reg_num] = car_data
 
-                return f"Loaded {len(loaded_data)} entities from file."
-        except FileNotFoundError:
-            print("\nFile not found. Please try another file.")
-        except TypeError:
-            print("\nFile is empty. Please try again.")
-        except json.decoder.JSONDecodeError:  # If file is not a JSON-file
-            print("\nInvalid file format. Make sure to input a JSON-file.")
-        except Exception as e:  # If any other error occurs in the function
-            print(f"An error occurred: {e}")
-            print(f"Error occurred on line {getframeinfo(currentframe()).lineno}")
-            continue
-        datafile = input("Enter filename: ")
+            return f"Loaded {len(loaded_data)} entities from file."
+    except FileNotFoundError:
+        return "\nFile not found. Please try another file."
+    except TypeError:
+        return "\nFile is empty. Please try again."
+    except json.decoder.JSONDecodeError:  # If file is not a JSON-file
+        return "\nInvalid file format. No data was imported. Make sure to input a JSON-file."
+    except Exception as e:  # If any other error occurs in the function
+        return f"An error occurred: {e}\nError occurred on line {getframeinfo(currentframe()).lineno}"
 
 
 def int_input(prompt):
@@ -382,7 +378,7 @@ def execute(choice, db_dict=cars_dict):
 
         elif choice == 2:  # Read file & history
             data = input("Enter filename: ")
-            print("\n" + read_from_file(data))
+            print(read_from_file(data))
 
         elif choice == 3:  # Add new car
             new_car_loop = True
