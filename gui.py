@@ -1,8 +1,6 @@
 import tkinter as tk
 from tkinter import *
 import main
-import os
-import inspect
 
 
 class Application(Frame):
@@ -305,7 +303,7 @@ class Application(Frame):
         elif not isinstance(car_obj, main.Car):
             self.new_output(f"Car [{reg_num}] not found in database. Try again.", window)
         elif not start_h or not end_h:
-            self.new_output(start_time, window)
+            self.new_output("Please follow the format HH:MM.", window)
         elif end_h < start_h or (end_h <= start_h and end_m < start_m) or (end_h == start_h and end_m == start_m):
             self.new_output(
                 "End time must be later than start time.\nIf you'd like to park over midnight, make two separate "

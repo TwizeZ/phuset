@@ -161,36 +161,44 @@ class Parking:
 
         :return: A string containing the total time.
         """
-        year, month, day = str(self.date).split("-")
+        try:
+            year, month, day = str(self.date).split("-")
 
-        start_hour, start_min = self.start_time.split(":")
-        end_hour, end_min = self.end_time.split(":")
+            start_hour, start_min = self.start_time.split(":")
+            end_hour, end_min = self.end_time.split(":")
 
-        ts1 = datetime(int(year), int(month), int(day), int(start_hour), int(start_min))
-        ts2 = datetime(int(year), int(month), int(day), int(end_hour), int(end_min))
+            ts1 = datetime(int(year), int(month), int(day), int(start_hour), int(start_min))
+            ts2 = datetime(int(year), int(month), int(day), int(end_hour), int(end_min))
 
-        total_time = ts2 - ts1
+            total_time = ts2 - ts1
 
-        return str(total_time)
+            return str(total_time)
+        except ValueError:
+            return "ERROR: Invalid time format."
+        except Exception as e:  # If any other error occurs in the function
+            return f"(An error occurred: {e}. Error occurred on line {getframeinfo(currentframe()).lineno})"
 
     def calc_cost(self):
         """Calculates the cost of the parking.
 
         :return: The total cost of the parking.
         """
-        hour, minute, _ = self.total_time.split(":")
+        try:
+            hour, minute, _ = self.total_time.split(":")
 
-        time = int(hour) + int(minute) / 60
-        rounded_time = ceil(time * 2) / 2
+            time = int(hour) + int(minute) / 60
+            rounded_time = ceil(time * 2) / 2
 
-        if self.car_class == "light":
-            cost_per_hour = 15
-        elif self.car_class == "medium":
-            cost_per_hour = 20
-        else:
-            cost_per_hour = 25
+            if self.car_class == "light":
+                cost_per_hour = 15
+            elif self.car_class == "medium":
+                cost_per_hour = 20
+            else:
+                cost_per_hour = 25
 
-        return round(cost_per_hour * rounded_time)  # Round up to avoid decimals
+            return round(cost_per_hour * rounded_time)  # Round up to avoid decimals
+        except Exception as e:  # If any other error occurs in the function
+            return f"(An error occurred: {e}. Error occurred on line {getframeinfo(currentframe()).lineno})"
 
 
 def write_to_file(datafile):
@@ -358,14 +366,14 @@ def execute(choice, db_dict=cars_dict):
             while True:
                 end_time = time_input("End time (HH:MM): ")
 
-                start_h, start_m = (int(t) for t in start_time.split(":"))
-                end_h, end_m = (int(t) for t in end_time.split(":"))
+                start_h, start_m = (int(t) for t in start_time.split(":"))  # Splitting the start time into hours and minutes
+                end_h, end_m = (int(t) for t in end_time.split(":"))  # Splitting the end time into hours and minutes
 
                 if (
                     end_h < start_h
                     or (end_h <= start_h and end_m < start_m)
                     or (end_h == start_h and end_m == start_m)
-                ):
+                ):  # Checks if the end time is earlier or the same as the start time
                     print("End time must be a later time than start time.")
                     print(
                         "If you'd like to park over midnight, please make two separate parking's."
@@ -431,17 +439,17 @@ def execute(choice, db_dict=cars_dict):
                 print(parking_info)
 
             pay_loop = True
-            while pay_loop:
+            while pay_loop:  # Loop to choose which parking to pay for
                 park_num = (
                     int_input(f"\nWhich parking entry would you like to pay for?\n>> ")
                     - 1
                 )
                 try:
-                    if park_num < 0:
+                    if park_num < 0:  # Raises an IndexError if the user enters a negative number
                         raise IndexError
-                    elif car.parking_history[park_num]["paid"]:
+                    elif car.parking_history[park_num]["paid"]:  # If the parking has already been paid for
                         print("This parking has already been paid for.")
-                    else:
+                    else:  # If the parking has not been paid for
                         cost = car.parking_history[park_num]["cost"]
                         print(f"\nThe cost for the parking is {cost}.")
                         pay_loop = False
@@ -454,7 +462,7 @@ def execute(choice, db_dict=cars_dict):
                     )
                     continue
 
-            if car.balance != 0:  # Only triggers if the car has a previous balance
+            if car.balance != 0:  # Only triggers if the car has any previous balance
                 balance_loop = True
                 while balance_loop:
                     use_balance = input(
@@ -462,13 +470,13 @@ def execute(choice, db_dict=cars_dict):
                     )
                     print()
                     if use_balance.lower() == "yes":
-                        if car.balance == cost:
+                        if car.balance == cost:  # If the balance is exactly the same as the cost
                             cost, car.balance = 0, 0
-                        elif car.balance < cost:
+                        elif car.balance < cost:  # If the balance is less than the cost
                             cost -= car.balance
                             print(f"Payment of {car.balance} was made. {cost} remains.")
                             car.balance = 0
-                        else:
+                        else:  # If the balance is more than the cost
                             car.balance -= cost
                         balance_loop = False
                     elif use_balance.lower() == "no":
@@ -484,13 +492,13 @@ def execute(choice, db_dict=cars_dict):
                         f"\n(If you pay more than the parking's fine, it will be added to a total balance.)\n>> "
                     )
                     print()
-                    if payment < cost:
+                    if payment < cost:  # If the payment is less than the cost
                         print(f"Not enough money. At least {cost} is required.")
-                    else:
+                    else:  # If the payment is more than the cost
                         car.balance = car.balance + (payment - cost)
                         payment_loop = False
 
-            print(car.pay_parking(park_num))
+            print(car.pay_parking(park_num))  # Calls the function to pay for the parking
 
         elif choice == 6:  # Display car information
             car = reg_check("Registration number of car to display information for: ")
